@@ -1,0 +1,139 @@
+--	INSERT INTO TABLES
+
+Insert into customer values (cust_sequence.nextval,'Gokul', 'Devunuri', '4761 Belwood Green', 'Halethorpe', 21227,4432783671, 'gokul127@yahoo.com', 'gokul127');
+Insert into customer values (cust_sequence.nextval,'Geethika', 'Mudunuri', '3639 Rockberry Road', 'Parkville', 21234,397235893, 'geethika@yahoo.com', 'geethika123');
+Insert into customer values (cust_sequence.nextval,'Dileep', 'Chappidi', '4766 Drayton Green', 'Halethorpe', 21227,4432489560, 'dileepc1@umbc.edu', 'dilip25827');
+Insert into customer values (cust_sequence.nextval,'Hussein', 'Hazari', '1660 Whitehead Ct', 'Gwynn Oak', 21207,6555413949, 'hazazi1@umbc.edu', 'hussein007');
+Insert into customer values (cust_sequence.nextval,'Hamad', 'Alsaleh', '2232 Pratt Street', 'Gwynn Oak', 21207,6559043743, 'alsaleh1@yahoo.com', 'hamad007');
+Insert into customer values (cust_sequence.nextval,'Bharath', 'Reddi', '4802 Fernley Square', 'Halethorpe', 21227,4432783039, 'bharath1@umbc.edu', 'bharath248');
+Insert into customer values (cust_sequence.nextval,'Sadhu', 'Mudunuri', '2546 Blackberry Road', 'Parkville', 21234,3972158545, 'sadhu@yahoo.com', 'sadhu@m');
+Insert into customer values (cust_sequence.nextval,'Rakesh', 'Arvapalli', '4705 Belwood Green', 'Halethorpe', 21227,2407846437, 'rakesh.aravapalli@gmail.com', 'raks65486');
+Insert into customer values (cust_sequence.nextval,'Riyaz', 'Habibi', '3545 Washington Blvd', 'Gwynn Oak', 21207,6655786374, 'riyaz1@umbc.edu', 'rh_5481154');
+
+
+Insert into house values (house_sequence.nextval,'1','4761 Belwood Green', 'Halethorpe', 21227);
+Insert into house values (house_sequence.nextval,'2','3639 Rockberry Road','Parkville', 21234);
+Insert into house values (house_sequence.nextval,'3','4766 Drayton Green','Halethorpe', 21227);
+Insert into house values (house_sequence.nextval,'4','1660 Whitehead Ct', 'Gwynn Oak', 21207);
+Insert into house values (house_sequence.nextval,'5','1660 Whitehead Ct', 'Gwynn Oak', 21207);
+Insert into house values (house_sequence.nextval,'6','4802 Fernley Square', 'Halethorpe', 21227);
+Insert into house values (house_sequence.nextval,'7','2546 Blackberry Road', 'Parkville', 21234);
+Insert into house values (house_sequence.nextval,'8','4705 Belwood Green', 'Halethorpe', 21227);
+Insert into house values (house_sequence.nextval,'9','3545 Washington Blvd', 'Gwynn Oak', 21207);
+
+
+Insert into account values (account_sequence.nextval,1,1,0, date '2015-08-15', date '2016-02-10', 'inactive');
+Insert into account values (account_sequence.nextval,2,2,0, date '2015-09-17',date '2016-12-10' , 'inactive');
+Insert into account values (account_sequence.nextval,3,3,0, date '2015-10-15', date '2016-10-15', 'inactive');
+Insert into account values (account_sequence.nextval,4,4,0, date '2015-08-13', date '2016-12-15', 'inactive');
+Insert into account values (account_sequence.nextval,5,5,786.78, date '2015-11-15', null, 'active');
+Insert into account values (account_sequence.nextval,6,6,546, date '2015-10-09', null, 'active');
+Insert into account values (account_sequence.nextval,7,7,0, date '2015-12-26', date '2016-10-15', 'active');
+Insert into account values (account_sequence.nextval,8,8,0, date '2016-01-07', date '2016-02-05', 'inactive');
+Insert into account values (account_sequence.nextval,9,9,0, date '2015-12-23',date '2016-10-15', 'inactive');
+Insert into account values (account_sequence.nextval,1,8,155.23, date '2016-02-06', null, 'active');
+Insert into account values (account_sequence.nextval,2,7,245.65, date '2016-10-16', null, 'active');
+Insert into account values (account_sequence.nextval,4,9,565.95, date '2016-10-23', null, 'active');
+Insert into account values (account_sequence.nextval,7,2,232.67, date '2016-12-11',  null, 'active');
+Insert into account values (account_sequence.nextval,8,1,876.21, date '2016-02-15', null, 'active');
+
+insert into rate values (rate_sequence.nextval, 1.42, 8.65, 121.44, date '2016-01-10');
+insert into rate values (rate_sequence.nextval, 2.42, 7.89, 231.42, date '2016-02-04');
+insert into rate values (rate_sequence.nextval, 2.78, 7.73, 164.46, date '2016-03-11');
+insert into rate values (rate_sequence.nextval, 1.58, 7.96, 234.16, date '2016-04-10');
+insert into rate values (rate_sequence.nextval, 1.89, 8.36, 124.96, date '2016-05-05');
+insert into rate values (rate_sequence.nextval, 1.42, 8.65, 163.44, date '2016-06-10');
+insert into rate values (rate_sequence.nextval, 2.42, 7.89, 162.42, date '2016-07-04');
+insert into rate values (rate_sequence.nextval, 2.78, 7.73, 110.46, date '2016-08-11');
+insert into rate values (rate_sequence.nextval, 1.58, 7.96, 112.16, date '2016-09-10');
+insert into rate values (rate_sequence.nextval, 1.89, 8.36, 122.96,date '2016-10-05');
+insert into rate values (rate_sequence.nextval, 1.42, 8.65, 133.44, date '2016-11-10');
+insert into rate values (rate_sequence.nextval, 2.42,7.89,  122.42, date '2016-12-04');
+
+
+
+Insert into monthlybill values (mb_sequence.nextval,1,1, 2015,09,65.30,22.26,18.5,324.82, date '2015-09-05');
+Insert into monthlybill values (mb_sequence.nextval,1,1, 2015,10,79.12,24.50,17.1,362.27, date '2015-10-05');
+Insert into monthlybill values (mb_sequence.nextval,1,1, 2015,11,95.20,29.82,13.2,369.69, date '2015-11-05');
+Insert into monthlybill values (mb_sequence.nextval,1,1, 2015,12,71.96,26.20,15.7,293.32, date '2015-12-05');
+Insert into monthlybill values (mb_sequence.nextval,1,1, 2016,01,76.15,23.44,16.5,515.15, date '2016-01-05');
+Insert into monthlybill values (mb_sequence.nextval,1,2, 2016,02,51.56,26.55,16.5,212.34, date '2016-02-05');
+Insert into monthlybill values (mb_sequence.nextval,1,3, 2016,03,66.52,19.16,16.5,532.78, date '2016-03-05');
+Insert into monthlybill values (mb_sequence.nextval,1,4, 2016,04,64.71,18.51,16.5,441.56, date '2016-04-05');
+Insert into monthlybill values (mb_sequence.nextval,1,5, 2016,05,55.91,17.55,16.5,512.64, date '2016-05-05');
+Insert into monthlybill values (mb_sequence.nextval,1,6, 2016,06,51.15,16.37,16.5,212.52, date '2016-06-05');
+Insert into monthlybill values (mb_sequence.nextval,1,7, 2016,07,59.16,15.46,16.5,285.67, date '2016-07-05');
+Insert into monthlybill values (mb_sequence.nextval,1,8, 2016,08,56.71,16.91,16.5,356.55, date '2016-08-05');
+Insert into monthlybill values (mb_sequence.nextval,1,9, 2016,09,96.66,17.72,16.5,852.75, date '2016-09-05');
+Insert into monthlybill values (mb_sequence.nextval,1,10, 2016,10,61.72,19.46,16.5,584.43, date '2016-10-05');
+Insert into monthlybill values (mb_sequence.nextval,1,11, 2016,11,32.91,51.27,16.5,314.16, date '2016-11-05');
+Insert into monthlybill values (mb_sequence.nextval,1,12, 2016,12,55.96,23.16,16.5,844.26, date '2016-12-05');
+
+Insert into monthlybill values (mb_sequence.nextval,2,1, 2015,10,79.12,24.50,17.1,362.27, date '2015-10-05');
+Insert into monthlybill values (mb_sequence.nextval,2,1, 2015,11,95.20,29.82,13.2,369.69, date '2015-11-05');
+Insert into monthlybill values (mb_sequence.nextval,2,1, 2015,12,71.96,26.20,15.7,293.32, date '2015-12-05');
+Insert into monthlybill values (mb_sequence.nextval,2,1, 2016,01,76.15,23.44,16.5,515.15, date '2016-01-05');
+Insert into monthlybill values (mb_sequence.nextval,2,2, 2016,02,51.56,26.55,16.5,212.34, date '2016-02-05');
+Insert into monthlybill values (mb_sequence.nextval,2,3, 2016,03,66.52,19.16,16.5,532.78, date '2016-03-05');
+Insert into monthlybill values (mb_sequence.nextval,2,4, 2016,04,64.71,18.51,16.5,441.56, date '2016-04-05');
+Insert into monthlybill values (mb_sequence.nextval,2,5, 2016,05,55.91,17.55,16.5,512.64, date '2016-05-05');
+Insert into monthlybill values (mb_sequence.nextval,2,6, 2016,06,51.15,16.37,16.5,212.52, date '2016-06-05');
+Insert into monthlybill values (mb_sequence.nextval,2,7, 2016,07,59.16,15.46,16.5,285.67, date '2016-07-05');
+Insert into monthlybill values (mb_sequence.nextval,2,8, 2016,08,56.71,16.91,16.5,356.55, date '2016-08-05');
+Insert into monthlybill values (mb_sequence.nextval,2,9, 2016,09,96.66,17.72,16.5,852.75, date '2016-09-05');
+Insert into monthlybill values (mb_sequence.nextval,2,10, 2016,10,61.72,19.46,16.5,584.43, date '2016-10-05');
+Insert into monthlybill values (mb_sequence.nextval,2,11, 2016,44,66.91,66.27,16.5,314.16, date '2016-11-05');
+Insert into monthlybill values (mb_sequence.nextval,2,12, 2016,12,55.96,23.16,16.5,844.26, date '2016-12-05');
+
+insert into outage values (outage_sequence.nextval, timestamp '2015-10-09 09:00:00.00', timestamp '2015-10-14 15:15:30.00', 'Resolved', 21227, 2);
+insert into outage values (outage_sequence.nextval, timestamp '2015-11-27 09:30:45.00', timestamp '2015-11-27 22:45:45.00', 'Resolved', 21227, 3);
+insert into outage values (outage_sequence.nextval, timestamp '2016-03-13 22:00:00.00', timestamp '2016-03-14 11:00:00.00', 'Resolved', 21227, 1);
+insert into outage values (outage_sequence.nextval, timestamp '2016-07-19 19:00:00.00', timestamp '2016-07-19 19:30:00.00', 'Resolved', 21227, 2);
+insert into outage values (outage_sequence.nextval, timestamp '2016-12-19 13:15:30.00', null, 'In progress', 21207, 1);
+insert into outage values (outage_sequence.nextval, timestamp '2016-12-19 16:30:30.00', timestamp '2016-12-19 18:45:00.00', 'Resolved', 21227, 3);
+insert into outage values (outage_sequence.nextval, timestamp '2016-12-19 16:30:30.00', timestamp '2016-12-20 18:45:00.00', 'Resolved', 21227, 1);
+
+insert into ticket values (ticket_sequence.nextval, 2, 'Water leakage', 'leakage and hole in the roof in bedroom one', date '2016-10-06', 'Resolved', '121.56', null);
+insert into ticket values (ticket_sequence.nextval, 1, 'Ac not working', 'Temperature doesnt go down below 70', date '2016-10-06', 'Resolved', '2314.21', null);
+insert into ticket values (ticket_sequence.nextval, 2, 'Front door broken', 'Front door do not get locked and broken', date '2016-10-06', 'Resolved', '565.75', null);
+insert into ticket values (ticket_sequence.nextval, 4, 'Wifi cable broken', 'Need to replace the wifi cable', date '2016-12-06', 'In progress', '30.69', null);
+insert into ticket values (ticket_sequence.nextval, 2, 'Gas leakage', 'Gas alarm observed unnecessarily', date '2016-12-06', 'In progress', '212.65', null);
+insert into ticket values (ticket_sequence.nextval, 3, 'Exhaust not working', 'Exhaust is not working when switched on', date '2016-10-06', 'Resolved', '50.75', null);
+insert into ticket values (ticket_sequence.nextval, 3, 'Bug treatment', 'Need to do bug treatment', date '2016-12-09', 'Resolved', '164.69', null);
+insert into ticket values (ticket_sequence.nextval, 6, 'Heater not working', 'Room doesnt get heated up quickly', date '2016-12-19', 'In progress', '945.65', null);
+
+insert into message values (msg_sequence.nextval, 1, 'Outage reporetd successfully', date '2016-10-03');
+insert into message values (msg_sequence.nextval, 3, 'Payment done successfully', date '2016-08-25');
+insert into message values (msg_sequence.nextval, 4, 'Outage has been already reported', date '2016-09-02');
+insert into message values (msg_sequence.nextval, 8, 'Outage has been resolved', date '2016-09-16');
+insert into message values (msg_sequence.nextval, 6, 'Bill is past due. Balance is 265.95', date '2016-10-15');
+insert into message values (msg_sequence.nextval, 1, 'Payment done successfully', date '2016-05-03');
+insert into message values (msg_sequence.nextval, 1, 'Bill is past due. Balance is 2565.95', date '2016-07-03');
+
+Insert into payment values (pay_sequence.nextval, 1, 1,date '2015-09-07', 369.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 2, 2,date '2015-07-15', 345.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 3, 3,date '2015-10-08', 382.00, 'Check');
+Insert into payment values (pay_sequence.nextval, 4, 4,date '2015-11-17', 253.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 5, 5,date '2015-12-13', 516.00, 'Check');
+Insert into payment values (pay_sequence.nextval, 6, 5,date '2015-12-15', 312.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 7, 5,date '2015-11-10', 487.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 8, 5,date '2015-09-07', 212.00, 'Check');
+Insert into payment values (pay_sequence.nextval, 9, 9,date '2016-09-22', 874.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 4, 12,date '2016-05-17', 625.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 7, 13,date '2016-07-13', 548.00, 'Check');
+Insert into payment values (pay_sequence.nextval, 1, 10,date '2016-09-15', 322.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 2, 11,date '2016-03-10', 845.00, 'Credit');
+Insert into payment values (pay_sequence.nextval, 8, 14,date '2016-11-07', 484.00, 'Check');
+
+
+Insert into outageHouse values (outageHouse_sequence.nextval,1,1);
+Insert into outageHouse values (outageHouse_sequence.nextval,1,6);
+Insert into outageHouse values (outageHouse_sequence.nextval,2,6);
+Insert into outageHouse values (outageHouse_sequence.nextval,2,1);
+Insert into outageHouse values (outageHouse_sequence.nextval,2,3);
+Insert into outageHouse values (outageHouse_sequence.nextval,3,3);
+Insert into outageHouse values (outageHouse_sequence.nextval,4,1);
+Insert into outageHouse values (outageHouse_sequence.nextval,4,8);
+Insert into outageHouse values (outageHouse_sequence.nextval,5,4);
+Insert into outageHouse values (outageHouse_sequence.nextval,6,3);
+Insert into outageHouse values (outageHouse_sequence.nextval,7,1);
