@@ -1,0 +1,99 @@
+-- Feature 11: Allow a customer to report an outage. The input is house ID and date and time of the outage. The system first checks whether there is an existing outage reported in the same zip code and on the same date. If so it is not a new outage and the feature simply adds the house ID to the list of house IDs of the outage if it is not inserted yet. Otherwise, it is a new outage so please generate a new outage ID and record the information. A message will be inserted into message table stating that outage report received. 
+create or replace procedure ReportOutage (houseid_out integer, out_time timestamp)
+is
+zip_code integer;
+acct_id integer;
+out_date date;
+start_date date;
+out_id integer;
+count1 integer;
+count2 integer;
+count3 integer;
+count4 integer;
+house_id integer;
+out_id2 integer;
+top_row_date date;
+begin
+select count(*) into count3 from house h, account a where h.houseID=houseid_out and a.houseID=h.houseID;
+if (count3>0) then
+select h.zipcode, a.accountID into zip_code, acct_id from house h, account a where h.houseID=houseid_out and a.houseID=h.houseID and a.STATUS='active' and a.ENDOFSERVICE is null;
+
+select count(*) into count1 FROM outage where OUTAGEZIPCODE=zip_code;
+  if(count1=0) then
+  --First record ever: No outage was created for this zipcode. we need to create a new outage, add data to outagehouse table, and insert message
+  insert into outage values (outage_sequence.nextval, out_time, null, 'In progress', zip_code, 1);
+  insert into outagehouse values (outageHouse_sequence.nextval, outage_sequence.currval, houseid_out);
+  insert into message values ( msg_sequence.nextval, acct_id, 'Outage report received', sysdate);
+  dbms_output.put_line('A new outage was created');
+  else 
+
+  select cast (out_time as date) into out_date from dual;
+  select CAST (starttime AS date) into start_date FROM outage where OUTAGEZIPCODE=zip_code and STATUS<>'Resolved';
+
+if(out_date=start_date) then
+--the status is NOT resolved... and it is on the same date.... so check if it is the same user who has reported it
+select count(*) into count4 from outageHouse oh, outage o where oh.HOUSEID=houseid_out and o.outageID = oh.OUTAGEID and o.STATUS<>'Resolved' ;
+
+  if (count4>0) then
+  dbms_output.put_line('You have already reported this outage and we are working on it');
+  else
+  select outageID into out_id from outage where OUTAGEZIPCODE=zip_code and status<>'Resolved';
+  update outage set NOOFHOUSESAFFECTED=NOOFHOUSESAFFECTED+1 where OUTAGEID=out_id ;
+  insert into outagehouse values (outageHouse_sequence.nextval, out_id, houseid_out);
+  insert into message values ( msg_sequence.nextval, acct_id, 'Outage report received', sysdate);
+  dbms_output.put_line('The outage has already been reported. It will be solved shortly');
+  end if;
+  
+else
+--the status is NOT resolved... and it is NOT on the same date
+  insert into outage values (outage_sequence.nextval, out_time, null, 'In progress', zip_code, 1);
+  insert into outagehouse values (outageHouse_sequence.nextval, outage_sequence.currval, houseid_out);
+  insert into message values ( msg_sequence.nextval, acct_id, 'Outage report received', sysdate);
+  dbms_output.put_line('A new outage was created');
+end if;
+  end if;
+else
+dbms_output.put_line('Wrong House ID');
+end if;
+exception
+when no_data_found then
+
+select start_date into top_row_date from (select CAST (startTime AS date) start_date FROM outage where OUTAGEZIPCODE=zip_code and STATUS='Resolved'
+order by CAST (starttime AS date) desc) where rownum<=1;
+dbms_output.put_line(top_row_date || out_date);
+
+if(top_row_date=out_date) then
+--the status is resolved... and it is on the same date. Tell the user that it was solved... that is all
+dbms_output.put_line('This outage issue was already resolved. Thanks for your patience');
+
+else
+
+--the status is resolved... and it is NOT on the same date. so create a new outage
+insert into outage values (outage_sequence.nextval, out_time, null, 'In progress', zip_code, 1);
+insert into outagehouse values (outageHouse_sequence.nextval, outage_sequence.currval, houseid_out);
+insert into message values ( msg_sequence.nextval, acct_id, 'Outage report received', sysdate);
+dbms_output.put_line('A new outage was created');
+
+end if;
+
+
+when too_many_rows then
+
+dbms_output.put_line('Too many rows');
+
+
+end;
+
+/
+
+-- New outage has been reported because there is no previous outage in this zipcode
+exec ReportOutage (7, timestamp '2016-12-19 09:44:33.0');
+-- A new house ID also reports an outage for an existing outage in that zipcode 
+--(in this case, no need to create a new outage, but the number of houses affected will increase
+exec ReportOutage (2, timestamp '2016-12-19 09:44:33.0');
+-- Case where the wrong house ID is inputted 
+exec ReportOutage (888, timestamp '2016-12-19 09:44:33.0');
+
+
+/
+
