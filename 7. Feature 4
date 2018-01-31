@@ -1,0 +1,85 @@
+--Feature 4:
+create or replace procedure startservice(var_houseID in integer, var_startdate in date, var_customerID in integer) IS
+accid integer;  -- This Variable holds the account ID for a given House ID and checks if there is an account for this House .
+flat_rate float;-- This Variable holds the rate for a given start date. 
+house_ID integer;-- This variable will hold a houseID  from a house table. 
+house_ID2 integer;--This variable holds the houseID from the account table.
+cust_ID integer;-- This variable holds the customer ID of the customer to check if the customer exists in the customer table.
+count1 integer;-- This Counter holds the number of houses linked to a specific houseID.
+count2 integer;--This counter holds  the number of houses in which the end requests dates are before the start service given on a  specific house (var_startdate).
+count3 integer;-- This counter indicates if the end service on the requested house is specified by the customer or not(Null) .
+count4 integer;-- This counter indicated if the customer already had an account on the house requested.
+/*
+First, we will check if the date provided has a rate from the rate table.Then based on the values saved in the variable flat_rate, 
+we will see if there are one or many rates for this month. If there are many rates an exception 
+will be thrown and a message will be displayed to the user that the given month
+has many rates in the Database.Then,the program will continue  and check if the given var_houseID is registered in the house table (If it exists or not) and check if the customer exist in the Database. 
+If both values (Var_HouseID, Var_Customer_ID) dont exist then an exception will occur and message will be printed that either customer ot house dont exist. 
+Otherwise, the program continue (count1)to check if the house is linked another account. 
+If the House is linked then we check if the house has an end service request before the given start service(var_startdate). 
+IF (count 2) is equal to 0 then that means the house requested (Var_HouseID ) is owned by other indvidual and no end  request submitted by the other customer.
+If (count 2) is more than 0 this mean the (Var_HouseID ) has an end request by another customer and any customer can request the house after the end service. (count3) checks if the house requested (Var_HouseID) has an end service or (null). 
+If (count 3) is more than 0 that means the owner of the house requested (Var_HouseID) did not submit an end request for the house requested 
+so a message will be displayed that ' This house is already linked to a customer and it has no end service request'.
+If (count3) equals to 0 then it means that this house (Var_HouseID) has an end service request so the customer can request for start service (var_startdate)after the end service. 
+Then we will check (count 4 )if the customer has an old account on the same house requested and status 'Inactive'. 
+If (count4) >0  then we will reactivate the old account and set the status to 'Active' and print a message for customer 'service has been re-activated'.
+If (count4) =0 then we create a new account for the customer on the house requested and print message to customer that new account has been created.
+*/
+begin
+flat_rate:=0;
+
+select flatfee into flat_rate from rate where Extract(month from chargeDate) = Extract(month from var_startdate);
+select houseID into house_ID from house where houseID=var_houseID;
+select customerID into cust_ID from customer where CUSTOMERID=var_customerID;
+select count(*) into count1 from account where houseID=var_houseID;   -- if the house is linked to another account or not 
+if(count1>0) then   -- if the house has an end request before the requested start service 
+select count(*) into count2 from account where houseID=var_houseID and (ENDOFSERVICE<var_startdate);
+  if(count2>0) then  -- if the requested house has an ENDOFSERVICE before the requested var_startdate
+  select count(*) into count3 from account where houseID=var_houseID and (ENDOFSERVICE is null);
+    
+    if (count3=0) then
+    select count(*) into count4 from account where CUSTOMERID=var_customerID and HOUSEID=var_houseID and status='inactive';
+      if(count4=0) then  -- create new account if there is no existing account on the requested house (Var_HouseID)
+      insert into account values (account_sequence.nextval, var_customerID, var_houseID, flat_rate, var_startdate, null, 'active');
+      insert into message values (msg_sequence.nextval, account_sequence.currval, 'The service will start on ' || var_startdate || ' and the new account number is (' || account_sequence.currval || ')', sysdate); 
+      dbms_output.put_line('A new account for customer ID: ' || var_customerID || ' has been successfully created');
+      else   --- (count4)'If there is an exsiting account on the same house for the same customer then we will set the account to 'active' '
+      update account set status='active', balance=balance+flat_rate, ENDOFSERVICE=null, STARTOFSERVICE=var_startdate where customerID=var_customerID and HOUSEID=var_houseID and STATUS='inactive';
+      insert into message values (msg_sequence.nextval, account_sequence.currval, 'The service will start on ' || var_startdate || ' and your old account number (' || account_sequence.currval || ') is activated', sysdate); 
+      dbms_output.put_line('The service has been re-activated for customer ID: ' || var_customerID);
+
+      end if;
+    else  -- (count3) if theere is no end request on the requested house 
+    dbms_output.put_line('This house is already linked to a customer and it has no end service request!');
+    end if;
+  else  --(count2)if the house requested (Var_HouseID) is linked to another account and no end service on that house 
+  dbms_output.put_line('you are trying to start service on a house that is linked to a customer and has no end service request');
+  end if;
+else -- (count 1) if the house requested is not linked to another account then we will create an account for the customer on this house 
+insert into account values (account_sequence.nextval, var_customerID, var_houseID, flat_rate, var_startdate, null, 'active');
+insert into message values (msg_sequence.nextval, account_sequence.currval, 'The service will start on ' || var_startdate || ' and the new account number is (' || account_sequence.currval || ')', sysdate); 
+dbms_output.put_line('A new account for customer ID: ' || var_customerID || ' has been successfully created');
+end if;
+
+exception
+when too_many_rows then
+dbms_output.put_line('Too many rates for the same month period');
+when no_data_found then
+dbms_output.put_line ('house ID or customer ID you entered in the query is wrong');
+
+
+
+end;
+/
+-- case 1: a customer starting service on a house that is not linked to any other customer on the date of starting the service (It will successfully create an account)
+exec startservice(4,date'2016-12-20',9);
+-- case 2: a customer starting service on a house that was rented to him in the past and was still inactive before requesting the start service
+exec startservice(3,date'2016-12-20',3);
+-- case 3: a customer starting service on a house that has no end service request (It will give an error saying that the house is linked to a customer)
+exec startservice(8,date'2016-12-20',2);
+-- case 4: using a wrong house ID or customer ID
+exec startservice(11,date'2016-12-20',11);
+
+
+/
