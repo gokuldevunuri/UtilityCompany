@@ -1,0 +1,26 @@
+--Feature 9: Allow a customer to report a service problem other than power outage (which is handled in feature 11). The input includes account ID, problem description, and report date. Generate a ticket ID and insert a row into ticket table.  Set the status to be “in progress”. Insert a message to the message table stating a ticket is generated. 
+
+create or replace procedure ReportProb(var_accountid in integer,probtype in varchar,probdesc in varchar,reportdate in date)
+is
+account_id integer;
+/* Check if the account id is a valid account id and if correct, insert the problem features in to ticket table which is ‘In progress’ and generate a ticket and insert a message saying that the ticket is generated for the problem:probtype message table for that account id */
+begin
+select accountID into account_id from account where accountID  = var_accountid;
+if account_id is not null then
+	 insert into ticket values (ticket_sequence.nextval, account_id, probtype, probdesc, reportdate, 'in progress', '0.00', null);
+	 insert into message values (msg_sequence.nextval, account_id, 'Ticket is generated for '||probtype, reportdate);
+   dbms_output.put_line('A ticket has been generated');
+
+ else
+ 	 dbms_output.put_line('No Account ID found');
+ end if;
+ exception
+ when no_data_found then
+  	 dbms_output.put_line('No Account ID found');
+when too_many_rows then
+ 	 dbms_output.put_line('too many rows');
+end;
+/
+exec ReportProb(4,'Water leakage Problem','Basement has flooded due to water heater leaking',date '2016-12-06');
+
+/
