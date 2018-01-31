@@ -1,0 +1,28 @@
+/*Feature 1: Register a customer with the system.
+The customer needs to provide name, address, phone#, email, password.
+The procedure should check whether the email already exists in user table.
+If so, please print a message saying the customer exists.
+Otherwise create an account with input values and return a new customer ID. 
+*/
+
+Create or Replace Procedure CreateAccount(fname Varchar,lname Varchar,street Varchar,city Varchar, zip number,cell number, mail Varchar, pass Varchar)
+AS 
+mail_id Varchar(30); -- this will hold the email if for the given customer
+Begin
+Select Count(email) into mail_id from customer Where email=Mail; --this will get the count of the emails id's which are same as the existing email id's in our database
+If (mail_id is not null and mail_id!=0) Then -- this will check if the email id is not null and if there's already an existing email id, then print the below output
+Dbms_Output.Put_Line('Email: '||mail|| ' already exists. Use a different email');
+Else -- this condition will be active if the email id is new 
+INSERT INTO customer values(cust_sequence.nextval, fname, lname, street, city, zip, cell, mail, pass); -- we insert the values in our customer table and print the output stating the customer id
+Dbms_Output.Put_Line('New account with email: ' || mail || ' is created, with customer ID: ' || cust_sequence.currval);
+End If;
+End;
+/
+-- Case 1- Email does not exist
+exec CreateAccount('Gayathri','Shankar','4767 Belwood Green','Arbutus','21227','3433539535','gay3@umbc.edu','122331324');
+-- Case 2- Email exists
+exec CreateAccount('Hussein','Hazazi','4767 Belwood Green','Arbutus','21227',2545453433,'hazazi1@umbc.edu','hazazi145465');
+
+
+
+/
