@@ -1,0 +1,26 @@
+-- Feature 8. Check for past due account and charge a late fee. There is no input. The feature checks for each account and see whether the balance is still positive if the current date is after the due date of the most recent monthly bill. If so, the account is past due and a 5% late charge is added to the account balance. Please also insert a message into message table stating that the account is past due. 
+
+create or replace procedure PastDue
+is
+cursor c1 is select a.ACCOUNTID from monthlyBill mb, account a where mb.dueDate < sysdate and a.balance>0 and mb.accountid=a.accountid;
+account_id integer;
+updated_balance float;
+begin
+open c1;
+loop
+fetch c1 into account_id;
+exit when c1%notfound;
+     -- The account is charged with 5% late charge fee 
+     update account set balance = round(balance*1.05,2) where accountID=account_id; 
+     select balance into updated_balance  from account  where accountID=account_id;
+	 insert into message values (msg_sequence.nextval, account_id, 'Bill is past due. Balance is ' || updated_balance , sysdate);
+   dbms_output.put_line('The bill for the account ID (' || account_id || ') is past due. A 5% late fee has been charged and the current balance is $'|| round(updated_balance,2));
+end loop;
+close c1;
+end;
+/
+-- doesn't require multiple cases - just one exec stmt
+exec pastDue; 
+
+
+/
