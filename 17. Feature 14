@@ -1,0 +1,47 @@
+-- Feature 14: Report outage statistics. The input is a start time and end time. Report the number of outages whose start time falls in the time period, the total number of houses affected, the average number of houses affected per outage, the zip code with the most number of outages, and the average duration of outage (computed from the start time to the resolved time). 
+
+Create or replace procedure outStat(start_Date timestamp, end_Date timestamp) 
+IS
+
+outage_Count integer;
+total_Noofhousesaffected integer;
+avg_Noofhousesaffected integer;
+zipcode_Max integer;
+AvgDuration_Outage number;
+count1 integer;
+intrvl number;
+
+/*First, select the count of number of outageID and the sum of  noOfHousesAffected  whose start time falls in the time period. Then find the average No. of Houses affected per outage.
+Later, select the zipcode  with the most number of outages using the maximum of the zipcode count grouped by the zipcode count */
+begin
+select count(outageID), sum(noOfHousesAffected) into outage_count, total_Noofhousesaffected from outage where startTime>=start_Date and startTime<=end_Date;
+
+dbms_output.put_line('Total No. of outages: '||Outage_Count);
+dbms_output.put_line('Total No. of Houses affected for outage: ' ||total_noofhousesaffected);
+dbms_output.put_line('Average No. of Houses affected per outage: ' || round(total_Noofhousesaffected/Outage_Count,2));
+select outagezipcode into zipcode_Max from (select count(outagezipcode), outagezipcode from outage where startTime>=start_Date and startTime<=end_Date group by outagezipcode order by count(outagezipcode) desc) where rownum<=1;
+dbms_output.put_line('Zipcode which has maximum outage: '||zipcode_Max);
+select count(outageID) into count1 from outage where endTime is null;
+if (count1>0) then
+--select avg(endTime-startTime) into AvgDuration_Outage from outage where startTime>=start_Date and startTime<=end_Date;
+
+/*compute the average duration of outage by using the selection of all the total no of seconds and finding the average of the total no of seconds of each column. Then convert the average total seconds into hours for display*/
+select
+    avg(extract(second from intrvl)
+        + extract(minute from intrvl) * 60
+        + extract(hour from intrvl) * 60 * 60
+        + extract(day from intrvl) * 60 * 60 * 24)/3600 into AvgDuration_Outage
+from (
+    select (endTime - startTime) intrvl 
+    from outage where endTime is not null and startTime>=start_Date and startTime<=end_Date
+);
+
+dbms_output.put_line('The average of the time it takes to resolve an outage is approximately '|| round(AvgDuration_Outage,2) || ' hour(s).');
+else
+dbms_output.put_line('None of the outages have been resolved to compute the average');
+end if;
+end;
+/
+exec outStat(timestamp '2015-05-03 09:30:30.00', timestamp '2019-05-03 09:30:30.00');
+
+/
