@@ -1,0 +1,25 @@
+/
+--Feature 7: Allow a customer to pay a certain amount to an account. The input includes account ID, payment amount, payment method (credit card or check). Please generate a payment record in payment history table including account ID, payment amount, payment method, and payment date (current date). The balance of the account will be reduced by that amount. Please also insert a message into message table stating payment received and payment amount. 
+
+create or replace procedure rec_payment(account_id integer, amt float, method varchar)
+is
+cust_id integer; -- this will hold the customer id that we will get from the given account number
+message varchar(255); -- this will hold the message to be inserted into the message table
+begin
+select customerID into cust_id from account where accountid = account_id; -- this will get the customer id for the entered account id
+	insert into payment values (pay_sequence.nextval, cust_id, account_id, sysdate, amt, method); -- a payment has been recorded into the payment table with customer id, account id and the amount paid
+	update account set balance = balance - amt where accountid = account_id; --the balance in the account table has been updated with the difference of the amount paid
+  insert into message values (msg_sequence.nextval, account_id, 'Payment Received : $'||amt, sysdate); -- a message has been inserted into the message table with the account id and the amount paid
+  	dbms_output.put_line('The payment has been successfully received!');
+
+exception 
+  when no_data_found then -- this is an exception when the entered account number is wrong and the below outpot is printed
+	dbms_output.put_line('Did not find an account with this ID. Try again');
+end;
+/
+-- case 1: successful payment
+exec rec_payment(14, 200, 'check');
+-- case 2: giving the wrong account ID
+exec rec_payment(144, 200, 'check');
+
+/
