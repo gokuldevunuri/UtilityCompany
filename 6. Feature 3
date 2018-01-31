@@ -1,0 +1,26 @@
+/*Feature 3: Allow a customer to read messages providing customer id and a starting date.
+ Print out messages for that customer since that date. */
+
+Create or replace procedure readMessage(cust_ID integer, start_Date date)
+IS
+cursor c1 is select messageBody, messageDate from Message,Account where customerID = cust_ID and messageDate >= start_Date and account.accountID = message.accountID;
+/*First retrieve the inputs of customer id into cust_ID and date from which the messages has to be displayed into the start_Date.Then select all the messages of that particular cust_ID using the Account ID from the Account table of a particular cust_ID  into an explicit cursor c1 where all the messages selected are greater than the start_Date.*/
+message_Body varchar(255); 
+m_date date;
+BEGIN
+open c1;
+ Dbms_output.put_line('The message(s) since '||start_Date || ':');
+
+/* Loop will print all the messages selected in the Cursor C1 of a particular customer with in the daterange until Cursor C1 is not found*/
+loop
+ fetch c1 into message_Body, m_date;
+ exit when c1%notfound;
+ Dbms_output.put_line(m_date || ' - ' || message_Body );
+end loop;
+end;
+/
+-- Only Case - displays all the messages for that particular customer starting on the given date
+exec readMessage(1,date '2013-12-01');
+
+
+/
