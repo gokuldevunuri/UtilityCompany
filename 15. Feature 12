@@ -1,0 +1,25 @@
+--Feature 12: Allow the system to report that an outage has been resolved. Update the outage status to resolved, record the resolved time. Insert a message to the message table for each account involved stating that the outage has been resolved. 
+
+Create or replace procedure outageResolved(out_ID int, resolve_time timestamp)
+IS
+cursor c1 is Select accountID from outage o, outagehouse oh, account a where o.OUTAGEID=out_ID and oh.HOUSEID=a.HOUSEID and o.STATUS<>'Resolved' and o.OUTAGEID=oh.OUTAGEID;
+acnt_id integer;
+/*First select the list of outages where outage status is not resolved and their corresponding accountid into an explicit cursor*/
+Begin
+open c1;
+/* loop on all the accounts which reported the outages for a particular outage ID and insert the message to message table stating that the outage:out_id has been resolved and update the status to resolved in outage table for corresponding outageID*/
+loop
+fetch c1 into acnt_id;
+exit when c1%notfound;
+Update outage Set status = 'Resolved', endTime = resolve_time where outageID = out_ID;
+insert into message values (msg_sequence.nextval, acnt_id, 'Outage '||out_id|| ' has been resolved for account ID ' || acnt_id, sysdate);
+end loop;
+dbms_output.put_line('The outage ' || out_ID || ' has been resolved');
+
+close c1;
+end;
+/
+exec outageResolved(5, timestamp '2016-11-11 09:00:30.00');
+
+/
+
