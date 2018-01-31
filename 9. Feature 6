@@ -1,0 +1,151 @@
+/
+--Feature 6 (commented and with full test case) : Generate monthly bill for an account. The input includes: account number, year, month, electricity usage, gas usage, bill generation date. Please first compute the total charge for that month, then update the account balance to the new total charge, record the usage information, and print out customer’s name, address, account#, previous balance (before the update), electricity usage and charge, gas usage and charge, and total charge. Please also set a due date which is 15 days from the bill generation date. For example, if the bill is generated on April 2nd 2016 for March 2016’s charge, the due date is April 17th 2016. Insert a message into message table stating bill is ready. You need to consider the following cases:
+
+create or replace procedure proc_monthlybill(var_accountID in integer, var_year in integer, var_month in integer, var_elecUsage in float, var_gasUsage in float, var_billGenerationDate in date) IS
+rate_id integer; -- this variable will hold the rate ID for the given month 
+previous_balance float; -- this variable will hold the previous balance for the given account
+due_date date; -- this variable will hold the due date for paying the bill
+unit_elec_charge float; -- this variable will hold the electricity charge per unit for a given month based on the rate for that month
+unit_gas_charge float; -- this variable will hold the gas charge per unit for a given month based on the rate for that month
+flat_fee float; -- this variable will hold the flat fee for a given month based on the rate for that month
+total_charges float; -- this variable will hold the total charges for an account being billed
+start_service date; -- this variable will hold the date of starting the service for a given account
+end_service date; -- this variable will hold the date of ending the service for a given account
+house_ID integer; -- this variable will hold the house ID that is linked to the given account
+customer_firstname varchar (20); -- this variable will hold the customer first name based on the given account ID
+customer_lastname varchar (20); -- this variable will hold the customer's last name based on the given account ID
+customer_street varchar (60); -- this variable will hold the customer's street based on the given account ID
+customer_city varchar (20); -- this variable will hold the customer's city based on the given account ID
+customer_zipcode number; -- this variable will hold the customer's zipcode based on the given account ID
+days_to_pay float; -- this variable will hold the percentage of the total number of days that the customer will have to pay for
+customer_ID integer; -- this variable will hold the customer's ID based on the given account ID
+count1 integer; -- for counting customers who are beginning their service after another customer ends on the same house for the same month and year
+count2 integer; -- for counting customers who are ending service their service before another customer starts on the same house for the same month and year
+begin
+/*
+in the next part of the code, we first set the due date equal to the bill generation date plus 15 days to update the due date later.
+then we get the rate ID for the month of bill in order to use it while calculating the charges.
+then we use that rate ID to get the electricity and gas charges per unit for a given month as well as the flat fee for that month.
+then we use the account ID to get the customer's previous balance, start and end of service and the house ID linked to that customer and accound number.
+then we use the account ID to get the customer's address information.
+then we check if there is another accounts that starts or ends service on the same month and year and the same house as the account that we are generating the bill for. 
+if there is another account starting service on the same month and year and house then we store this in the variable count1;
+if there is another account ending service on the same month and year and house then we store this in the variable count2;
+
+*/
+due_date := var_billGenerationDate + interval '15' day;
+select rateID into rate_id from rate where Extract(month from chargeDate) = var_month;
+select flatfee, currentElecCharge, currentGasCharge into flat_fee, unit_elec_charge, unit_gas_charge from rate where rateID=rate_id; 
+select balance, startOfService, endOfService, houseID into previous_balance, start_service, end_service, house_ID from account where accountID=var_accountID;
+select firstName, lastName, street, city, zipcode into customer_firstname, customer_lastname, customer_street, customer_city, customer_zipcode from customer c, account a where a.customerID=c.customerID and a.accountID=var_accountID;
+select count(*) into count1 from account where startOfService>end_service and houseID=house_ID and var_month=Extract(month from startOfService) and var_year=Extract(year from startOfService);
+select count(*) into count2 from account where endOfService<start_service and houseID=house_ID and var_month=Extract(month from endOfService) and var_year=Extract(year from endOfService);
+previous_balance:=round(previous_balance,2);
+
+
+-- case one:
+/*
+this is the normal case:
+when there is no other customer starting or ending service on the same house in the same month and year (we did this check in the if statement. 
+Here the customer has to pay for the whole month and the total charge will equal to
+previous balance + electricity usage * unit charge for electricity + gas usage * gas unit charge + flat fee
+*/
+if (Extract(month from start_service)!=var_month and (Extract(month from end_service)!=var_month or Extract(month from end_service) is null)) or (Extract(year from start_service)!=var_year and (Extract(year from end_service)!=var_year or Extract(year from end_service) is null)) then
+total_charges := previous_balance + (var_elecUsage * unit_elec_charge) + (var_gasUsage * unit_gas_charge) + flat_fee;
+total_charges := round(total_charges,2); -- this is to round the outcome of total charges to two decimal points.
+-- the next line displays to the screen the customer and charge information.
+dbms_output.put_line('Case 1: INFORMATION FOR ACCOUNT NUMBER ' || var_accountID || ': ' ||' The customer ' || customer_firstname || ' ' || customer_lastname || ' lives on ' || customer_street ||' city: ' || customer_city || ' zip code ' || customer_zipcode || ' is using ' || var_elecUsage || ' wats of electricity for $' || var_elecUsage * unit_elec_charge || ' and using ' || var_gasUsage || ' cubic feet of gas for $' || var_gasUsage * unit_gas_charge || '. The previous balance was: $' || previous_balance || '. The total charges are: $' || total_charges);
+-- the next line generates the bill in the monthlybill table with all the needed information.
+insert into monthlybill values(mb_sequence.nextval, var_accountID, rate_id, var_year, var_month, var_elecUsage, var_gasUsage, previous_balance, total_charges, due_date);
+-- the next line updates the customer's balance in the account table to reflect the new total charges
+update account set balance=total_charges where accountID=var_accountID;
+-- the next line generates a new message to the user stating that the bill is ready.
+insert into message values(msg_sequence.nextval, var_accountID, 'Your bill is ready!', sysdate);
+
+-- Case 2: a customer ending service on the same month of generating the bill:
+elsif Extract(month from end_service)=var_month and Extract(year from end_service)=var_year then
+-- Case 2.1 When we find another customer who starts service on that same month
+-- the customer will have to pay only for the days he was living in the house.
+if (count1=1) then
+-- the next line gives us the customer ID of the customer who is starting his service on the same month.
+select customerID into customer_ID from account where startOfService>end_service and houseID=house_ID and var_month=Extract(month from startOfService) and var_year=Extract(year from startOfService);
+-- the next line calculates the percentage of days that the customer whose bill is being generated will need to pay.
+days_to_pay:=extract (day from end_service)/extract (day from last_day(end_service));
+days_to_pay:=round(days_to_pay,2);
+total_charges := (previous_balance + (var_elecUsage * unit_elec_charge) + (var_gasUsage * unit_gas_charge) + flat_fee)*days_to_pay;
+total_charges := round(total_charges,2);
+insert into monthlybill values(mb_sequence.nextval, var_accountID, rate_id, var_year, var_month, var_elecUsage, var_gasUsage, previous_balance, total_charges, due_date);
+update account set balance=total_charges where accountID=var_accountID;
+insert into message values(msg_sequence.nextval, var_accountID, 'Your bill is ready!', sysdate);
+dbms_output.put_line('Case 2.1 (There is another customer starting service on the same month): INFORMATION FOR ACCOUNT NUMBER ' || var_accountID || ': ' ||' The customer ' || customer_firstname || ' ' || customer_lastname || ' lives on ' || customer_street ||' city: ' || customer_city || ' zip code ' || customer_zipcode || ' is using ' || var_elecUsage || ' wats of electricity for $' || var_elecUsage * unit_elec_charge || ' and using ' || var_gasUsage || ' cubic feet of gas for $' || var_gasUsage * unit_gas_charge || '. The previous balance was: $' || previous_balance || '. The total charges are: $' || total_charges);
+dbms_output.put_line('The customer will have to pay only for  ' || days_to_pay || ' of that month total charge ');
+
+else
+-- Case 2.2 this part of the code is when we can't find a customer whose service starts on that month
+-- the current customer will pay for the whole month
+total_charges := previous_balance + (var_elecUsage * unit_elec_charge) + (var_gasUsage * unit_gas_charge) + flat_fee;
+total_charges := round(total_charges,2);
+dbms_output.put_line(' Case 2.2 (There is no other customer whose service starts on the same month): INFORMATION FOR ACCOUNT NUMBER ' || var_accountID || ': ' ||' The customer ' || customer_firstname || ' ' || customer_lastname || ' lives on ' || customer_street ||' city: ' || customer_city || ' zip code ' || customer_zipcode || ' is using ' || var_elecUsage || ' wats of electricity for $' || var_elecUsage * unit_elec_charge || ' and using ' || var_gasUsage || ' cubic feet of gas for $' || var_gasUsage * unit_gas_charge || '. The previous balance was: $' || previous_balance || '. The total charges are: $' || total_charges);
+insert into monthlybill values(mb_sequence.nextval, var_accountID, rate_id, var_year, var_month, var_elecUsage, var_gasUsage, previous_balance, total_charges, due_date);
+update account set balance=total_charges where accountID=var_accountID;
+insert into message values(msg_sequence.nextval, var_accountID, 'Your bill is ready!', sysdate);
+end if;
+
+-- Case 3 If the customer is starting service on the same month of generating the bill
+elsif Extract(month from start_service)=var_month and Extract(year from start_service)=var_year then
+
+if count2=1 then
+-- Case 3.1 when there is another customer whose serivce ends on the same month in which the current customer's service starts
+-- the current customer (whose bill is being generated) will only have to pay for the days he was living in the house.
+-- the next line is to find the customer whose service will end on that same month so we can set his service to 'inactive'.
+select customerID into customer_ID from account where endOfService<start_service and houseID=house_ID and var_month=Extract(month from endOfService)and var_year=Extract(year from endOfService);
+-- the next line is to get the number of days that the current customer will have to pay for (how many day's he was actually living in the house.
+days_to_pay:=(extract (day from last_day(start_service)) - extract (day from start_service))/extract (day from last_day(start_service));
+days_to_pay:=round(days_to_pay,2); -- this is to round the outcome to two decimal points.
+-- the next line calculates the total charges (it multiplies the usual formula of calculating the total charges by the percentage of days that the customer has to pay for.
+total_charges := (previous_balance + (var_elecUsage * unit_elec_charge) + (var_gasUsage * unit_gas_charge) + flat_fee)*days_to_pay;
+total_charges := round(total_charges,2);
+insert into monthlybill values(mb_sequence.nextval, var_accountID, rate_id, var_year, var_month, var_elecUsage, var_gasUsage, previous_balance, total_charges, due_date);
+update account set balance=total_charges where accountID=var_accountID;
+-- in the next line we set the old customer's status to 'inactive' because the new customer's bill has been generated so the old customer has to be inactive.
+update account set status='inactive' where endOfService<start_service and houseID=house_ID and var_month=Extract(month from endOfService) and var_year=Extract(year from endOfService);
+insert into message values(msg_sequence.nextval, var_accountID, 'Your bill is ready!', sysdate);
+dbms_output.put_line(' Case 3.1 (There was another customer who ended service on the same house in the same month and year): INFORMATION FOR ACCOUNT NUMBER ' || var_accountID || ': ' ||' The customer ' || customer_firstname || ' ' || customer_lastname || ' lives on ' || customer_street ||' city: ' || customer_city || ' zip code ' || customer_zipcode || ' is using ' || var_elecUsage || ' wats of electricity for $' || var_elecUsage * unit_elec_charge || ' and using ' || var_gasUsage || ' cubic feet of gas for $' || var_gasUsage * unit_gas_charge || '. The previous balance was: $' || previous_balance || '. The total charges are: $' || total_charges);
+dbms_output.put_line('The customer will have to pay only for ' || days_to_pay || ' of that month total charge');
+
+else
+-- Case 3.2 if we can't find a customer whose service starts on that month, the current customer will pay for the whole month
+
+total_charges := previous_balance + (var_elecUsage * unit_elec_charge) + (var_gasUsage * unit_gas_charge) + flat_fee;
+total_charges := round(total_charges,2);
+dbms_output.put_line('Case 3.2 (There is no other customer whose service ends the same month and year on the same house): INFORMATION FOR ACCOUNT NUMBER ' || var_accountID || ': ' ||' The customer ' || customer_firstname || ' ' || customer_lastname || ' lives on ' || customer_street ||' city: ' || customer_city || ' zip code ' || customer_zipcode || ' is using ' || var_elecUsage || ' wats of electricity for $' || var_elecUsage * unit_elec_charge || ' and using ' || var_gasUsage || ' cubic feet of gas for $' || var_gasUsage * unit_gas_charge || '. The previous balance was: $' || previous_balance || '. The total charges are: $' || total_charges);
+insert into monthlybill values(mb_sequence.nextval, var_accountID, rate_id, var_year, var_month, var_elecUsage, var_gasUsage, previous_balance, total_charges, due_date);
+update account set balance=total_charges where accountID=var_accountID;
+insert into message values(msg_sequence.nextval, var_accountID, 'Your bill is ready!', sysdate);
+end if;
+
+
+end if;
+exception 
+when no_data_found then
+dbms_output.put_line('You entered the wrong account number or month');
+when too_many_rows then
+dbms_output.put_line('Too many rows returned!');
+
+end;
+/
+-- normal case: The customer is not ending or starting service on that month: check
+exec proc_monthlybill(11,2016,11, 10,30,date '2016-5-30');
+-- case 2.1 There is another customer starting service on that month (the customer will only pay for the days he was living in the house): check
+exec proc_monthlybill(7,2016,10, 3,3,date '2016-10-04'); 
+-- case 2.2 There is no other customer starting service on that month (the customer will pay for the whole month): check
+exec proc_monthlybill(5,2016,12, 3,3,date '2016-10-15'); 
+-- case 3.1 There is another customer ending service on that month (the customer will only pay for the days he was living in the house): check
+exec proc_monthlybill(11,2016,10, 3,3,date '2016-10-30'); 
+-- case 3.2 There is no other customer ending service on that month (the customer will pay for the whole month): check
+exec proc_monthlybill(6,2015,10, 3,3,date '2015-10-30'); 
+-- Wrong month or account number entered: check
+exec proc_monthlybill(87787,2016,13, 3,3,date '2016-11-1');
+
+
+/
