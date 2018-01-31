@@ -1,0 +1,54 @@
+/*Feature 2: Allow a customer to login by providing email and password. 
+Please check whether email exists and password matches.
+If not, please print a message to indicate the error. 
+Otherwise print a message to indicate user has logged on. 
+The procedure should return a value 1 for success login and 0 for unsuccessful log in. */
+
+create or replace procedure UserLogin(eid varchar, pwd varchar, results out integer)
+AS
+email_id customer.email%type;
+pass customer.password%type;
+BEGIN
+select email, password into email_id, pass from customer 
+where email=eid;
+  IF(eid=email_id AND pwd = pass) then 
+  -- if inputs match the email/pass in the db
+	results:= 1;
+	dbms_output.put_line('Login Successful.');
+  else
+  -- in case of mismatch
+    results:= 0;
+  	dbms_output.put_line('Password is Incorrect');
+  end if;
+exception 
+  -- when email isn't even found in the db
+  when no_data_found then
+	results:= 0;
+	dbms_output.put_line('Incorrect Email ID or Password - Try again.');
+end;
+/
+-- Valid login 
+declare
+results integer;
+begin
+UserLogin('geethika@yahoo.com','geethika123',results);
+dbms_output.put_line(results);
+End;
+/
+-- Case 1 - Invalid login: Incorrect password/email 
+declare
+results integer;
+begin
+ UserLogin('geethidka@yahoo.com','geethika1223',results);
+dbms_output.put_line(results);
+End;
+/
+-- Case 2 -  Invalid login: wrong password
+declare
+results integer;
+begin
+UserLogin('geethika@yahoo.com','geethika3123',results);
+dbms_output.put_line(results);
+End;
+
+/
