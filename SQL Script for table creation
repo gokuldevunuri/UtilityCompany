@@ -1,0 +1,145 @@
+CREATE TABLE customer (
+customerID integer, 
+firstName varchar(20),
+lastName varchar(20),
+street varchar(60),
+city varchar(20),    
+zipcode number, 
+phoneNo number, 
+email varchar(60),
+password varchar(20),
+primary key(customerID));   	
+
+CREATE TABLE house (
+houseID integer, 
+customerID integer,  
+street varchar(20), 
+city varchar(20),
+zipcode number,  
+primary key(houseID),
+foreign key(customerID) references customer); 
+
+CREATE TABLE account(
+accountID integer, 
+customerID integer,
+houseID integer,
+balance float, 
+startOfService date , 
+endOfService date, 
+status varchar(20), 
+PRIMARY KEY (accountID), 
+FOREIGN KEY(houseID) REFERENCES house, 
+FOREIGN KEY (customerID) REFERENCES customer);
+
+CREATE TABLE rate (
+rateID integer, 
+currentElecCharge float, 
+currentGasCharge float,
+flatFee float, 
+chargeDate date,
+PRIMARY KEY(rateID));
+
+CREATE TABLE monthlybill (
+billID integer,
+accountID integer,
+rateID integer,
+yearofbill integer,
+monthofbill integer,
+electricityUsage float,
+gasUsage float,
+previousBalance float,
+totalCharges float, 
+dueDate date ,
+primary key (billid),
+foreign key (accountID) references account (accountID),
+foreign key(rateID) REFERENCES rate );
+
+CREATE TABLE outage (
+outageID integer, 
+startTime timestamp, 
+endTime timestamp, 
+status varchar(20),
+outageZipcode integer,
+noOfHousesAffected integer, 
+PRIMARY KEY(outageID));
+
+CREATE TABLE ticket (
+ticketID integer, 
+accountID integer, 
+problemType varchar(80), 
+problemDescription varchar(255), 
+reportDate date, 
+problemStatus varchar(20), 
+serviceCharge float, 
+problemFixDate date, 
+PRIMARY KEY(ticketID), 
+FOREIGN KEY (accountID) REFERENCES account); 
+
+CREATE TABLE message (
+messageID integer, 
+accountID integer, 
+messageBody varchar(255), 
+messageDate date,
+PRIMARY KEY (messageID), 
+FOREIGN KEY(accountID) REFERENCES account);
+
+CREATE TABLE payment(
+paymentID integer, 
+customerID integer, 
+accountID integer,
+paymentDate date,
+paymentAmount float, 
+paymentType varchar(20), 
+PRIMARY KEY(paymentID), 
+FOREIGN KEY (customerID) REFERENCES customer,  
+FOREIGN KEY (accountID) REFERENCES account);
+
+CREATE TABLE outageHouse (
+recordID integer, 
+outageID integer, 
+houseID integer, 
+PRIMARY KEY (recordID), 
+FOREIGN KEY (outageID) REFERENCES outage, 
+FOREIGN KEY (houseID) REFERENCES house );
+
+--	CREATE SEQUENCES
+
+Create sequence cust_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence house_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence account_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence rate_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence mb_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence outage_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence ticket_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence msg_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence pay_sequence start with 1
+increment by 1
+minvalue 1;
+
+Create sequence outageHouse_sequence start with 1
+increment by 1
+minvalue 1;
