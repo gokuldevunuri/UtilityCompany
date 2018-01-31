@@ -1,0 +1,73 @@
+--Feature 13 (fully commented and tested): Compute for a given zip code, the average electricity usage and the average usage of the bottom 20% of houses. Do the same for gas usage as well. Hint: you need to sort the houses by usage and identify the first 20%.
+
+
+-- feature 13: a function to count the number of houses for a certain zipcode who have generated a gas bill in a certain month and year
+create or replace function fun_gas_count (var_zipcode in integer, var_year in integer, var_month in integer)
+return number IS
+gas_count number;
+begin
+select count(mb.GASUSAGE) into gas_count from house h, account a , monthlybill mb where h.zipcode = var_zipcode and mb.yearofbill=var_year and mb.monthofbill=var_month and a.ACCOUNTID=mb.ACCOUNTID and h.HOUSEID=a.HOUSEID;
+return gas_count;
+exception
+when no_data_found then
+return -1;
+end;
+/
+-- a function to count the number of houses for a certian zipcode who have generated an electricity bill in a certain month and year
+create or replace function fun_elec_count (var_zipcode in integer, var_year in integer, var_month in integer)
+return number IS
+elec_count number;
+begin
+select count(mb.ELECTRICITYUSAGE) into elec_count from house h, account a , monthlybill mb where h.zipcode = var_zipcode and mb.yearofbill=var_year and mb.monthofbill=var_month and a.ACCOUNTID=mb.ACCOUNTID and h.HOUSEID=a.HOUSEID;
+return elec_count;
+exception
+when no_data_found then
+return -1;
+end;
+/
+-- feature 13: the procedure for feature 13 (using the two functions above)
+create or replace procedure proc_rptusage(var_zipcode in integer, var_year in integer, var_month in integer, avgElecALL out float, avgGasAll out float, avgElec20 out float, avgGas20 out float) AS
+
+begin
+-- the next line gets the average of electricity and gas usage for all the houses in a given zip code for a given month an year
+select avg(ELECTRICITYUSAGE), avg(mb.gasUsage) into avgElecAll, avgGasAll from house h, account a , monthlybill mb where h.zipcode = var_zipcode and mb.yearofbill=var_year and mb.MONTHOFBILL=var_month and h.HOUSEID=a.HOUSEID and a.ACCOUNTID=mb.ACCOUNTID;
+/*
+the next line gets the average electricity usage for the lower 20% of houses that use
+less electricity in a given zip code for a given month an year
+we used the (fun_elec_count) function to get the number of all houses in that area who have electricity bill in the given month and year
+then ordered them an an ascending order so the lower would be at the top
+then we got the first 20% of the rows.
+*/
+select avg(ELECTRICITYUSAGE) into avgElec20 from (select mb.electricityusage from house h, account a , monthlybill mb where h.zipcode = var_zipcode and mb.yearofbill=var_year and mb.monthofbill = var_month and h.HOUSEID=a.HOUSEID and a.ACCOUNTID=mb.ACCOUNTID order by mb.electricityusage) where (rownum=1 or rownum<=fun_elec_count(var_zipcode,var_year,var_month)*0.20);
+/*
+the next line gets the average gas usage for the lower 20% of houses that use
+less electricity in a given zip code for a given month an year
+we used the (fun_gas_count) function to get the number of all houses in that area who have gas bill in the given month and year
+then ordered them an an ascending order so the lower would be at the top
+then we got the first 20% of the rows.
+*/
+select avg(GASUSAGE) into avgGas20 from (select mb.gasusage from house h, account a , monthlybill mb where h.zipcode = var_zipcode and mb.yearofbill=var_year and mb.MONTHOFBILL=var_month and h.HOUSEID=a.HOUSEID and a.ACCOUNTID=mb.ACCOUNTID order by mb.gasusage) where (rownum=1 or rownum<=fun_gas_count(var_zipcode,var_year,var_month)*0.20);
+
+exception 
+when no_data_found then
+dbms_output.put_line('No data found');
+when too_many_rows then
+dbms_output.put_line('Too many rows returned');
+
+END;
+/
+-- feature 13: executing feature 13 procedure
+declare
+avg_ElecAll float;
+avg_GasAll float;
+avg_Elec20 float;
+avg_Gas20 float;
+begin
+proc_rptusage(21227,2016,11,avg_ElecAll,avg_GasAll,avg_Elec20,avg_Gas20);
+dbms_output.put_line('Average electricity for all houses:  ' || round(avg_ElecAll,2));
+dbms_output.put_line('Average gas for all houses: ' || round(avg_GasAll,2));
+dbms_output.put_line('Average electricity usage for the lower 20% of houses that use less electricity: ' || round(avg_Elec20,2));
+dbms_output.put_line('Average gas usage for the lower 20% of houses that use less gas: ' || round(avg_Gas20,2));
+end;
+
+/
