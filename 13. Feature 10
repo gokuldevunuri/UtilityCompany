@@ -1,0 +1,44 @@
+/*Feature 10: Mark a service problem being resolved.
+The input includes ticket ID, service charge, and service date.
+Please update the status to “resolved” and add the service charge to the account balance.
+Insert a message to the message table stating the ticket is resolved. 
+*/
+
+create or replace procedure ResolveProb(Tkt_id integer, 
+	Servc_charge integer, servc_date date)
+is
+account_id integer;
+current_status TICKET.PROBLEMSTATUS%type;
+begin
+select accountID into account_id from ticket where ticketID = tkt_id;
+select problemStatus into current_status from ticket where ticketID=tkt_id and REPORTDATE<=servc_date;
+if(current_status='Resolved') then
+  -- if stmt checks if the given ticket is already resolved
+  dbms_output.put_line('This ticket has already been resolved in the past');
+else
+  -- if the ticket isn't resolved, it'll add a service charge, update balance of the account holder, and insert msg stmt
+update ticket set problemStatus = 'Resolved', serviceCharge=Servc_charge where ticketID = tkt_id;
+update account set balance = balance+Servc_charge where accountID = account_id;
+insert into message values (msg_sequence.nextval, account_id, 'Resolved Ticket Number '|| tkt_id, sysdate);
+dbms_output.put_line('This ticket is now resolved. A service charge of $' || Servc_charge || ' was added to the account balance');
+
+end if;
+
+exception
+when no_data_found then
+dbms_output.put_line('Invalid ticket number, or a wrong service date');
+
+when too_many_rows then
+dbms_output.put_line('Too many rows!');
+
+end;
+
+/
+-- Resolved ticket
+exec ResolveProb(2, 54, date '2016-10-06');
+-- In progress ticket
+exec ResolveProb(4, 20, date '2016-12-23'); 
+-- The service date is before the report date or the ticket number is invalid
+exec ResolveProb(4, 20, date '2011-12-23'); 
+
+/
