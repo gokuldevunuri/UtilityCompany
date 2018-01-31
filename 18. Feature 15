@@ -1,0 +1,59 @@
+--Feature 15: Do a comparative study for a customer. The input is the account number, the year and month. Report the electricity and gas usage of the customer for that month, the usage of the customer for the same month last year, and the average usage of all customers in the same zip code, the average usage of the bottom 20% of houses in the same zip code. You can call feature 13 to get the average usage and bottom 20% usage. 
+
+
+create or replace procedure compStudy (var_accountID in integer, var_year in integer, var_month in integer) AS
+elec_usage float;-- This variable holds the electricity usage for the given account(var_accountID) 
+gas_usage float;--This variable holds the gas usage for the given account(var_accountID)
+avg_elec20 float;--This variable holds the average electricity usage for the bottom 20 % houses(houses use the least eclectricity )retrieved from feature 13 
+avg_gas20 float;--This variable holds the average gas usage for the bottom 20 % houses(houses use the least gas )retrieved from feature 13  
+avg_elecAll float;-- This variable holds the the average of  electricity usage of all houses in a certain zipcode 
+avg_gasAll float;-- This variable holds the average of gas usage of all houses in a certain zipzode 
+zip_code integer; 
+count1 integer; -- this counter check if the customer has a bill on  the same date previous year for a specific house  
+begin
+/*
+First , we retrieve the electricity and gas usage for a certain a customer for a specific year. 
+Then we get the the usage for the given account in the previous year. 
+The count variable indicates if the account has electricity and gas usage in the previous.
+if it's bigger than 0 then it means the account has usage information last year. 
+Else an exception will be occurred , that means this account did not have usage information the previous year and a message will be displayed that this account don't have usage information the previous year . 
+A message will be displayed to indicate this information. After this we call Feature 13 to get average usage(both Electricity and Gas) for a certain Zipcode.
+In addition,we will get the house with least usage(20%). If there are houses in the zipcode (not null) 
+then it will be displayed.Otherwise, if there are no houses a message will be displayed that the average could not be computed   
+*/
+select ELECTRICITYUSAGE, GASUSAGE into elec_usage, gas_usage from monthlybill where ACCOUNTID=var_accountID and MONTHOFBILL=var_month and YEAROFBILL=var_year;
+select zipcode into zip_code from house h, account a where h.houseID=a.HOUSEID and a.ACCOUNTID=var_accountID;
+dbms_output.put_line('- For account ID ' || var_accountID || ', month ' || var_month || ', and year ' || var_year || ': the electricity usage is ' || elec_usage || ' and the gas usage is ' || gas_usage);
+
+select count(*) into count1 from monthlybill where ACCOUNTID=var_accountID and MONTHOFBILL=var_month and YEAROFBILL=(var_year-1);
+-- Usage information exists for previous year 
+if(count1>0) then
+select ELECTRICITYUSAGE, GASUSAGE into elec_usage, gas_usage from monthlybill where ACCOUNTID=var_accountID and MONTHOFBILL=var_month and YEAROFBILL=(var_year-1);
+dbms_output.put_line('- On the same month of the year ' || (var_year-1) || ' for account ID ' || var_accountID  || ': the electricity usage was ' || elec_usage || ' and the gas usage was ' || gas_usage);
+-- Usage information dont exist for previous year 
+else
+dbms_output.put_line('- there is no usage information for the same month in year ' || (var_year-1));
+end if;
+
+proc_rptusage(zip_code, var_year, var_month, avg_elecAll, avg_gasAll, avg_elec20, avg_gas20);
+if(avg_elec20 is not null or avg_gas20 is not null) then
+dbms_output.put_line('- The average of the lowest 20% of the houses within your zip code with the least electricity usage is ' || avg_elec20);
+dbms_output.put_line('- The average of the lowest 20% of the houses within your zip code with the least gas usage is ' || avg_gas20);
+
+-- If there are no other houses in the for the zipcode of the given account 
+else
+dbms_output.put_line('- The average of the lowest 20% of the houses within your zip code with the least gas and electricity usage could not be computed');
+
+--dbms_output.put_line(var_year || var_month || zip_code || avg_gasAll);
+end if;
+
+exception 
+-- if there is no usage information for the given account 
+when no_data_found then
+dbms_output.put_line('no usage information for this account on this month and year');
+end;
+/
+-- This is a compartive study for an account that has electricity and gas usage information in November of 2016 and 2015.
+-- it also shows the average of the lowest 20% of the houses within the same zipcode as this house
+exec compStudy(1,2016,11);
+
